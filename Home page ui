@@ -1,0 +1,416 @@
+package com.example.horizonloop
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+// ========== COLOR PALETTE (same as HTML) ==========
+object HorizonColors {
+    val Background = Color(0xFF121212)
+    val Card = Color(0xFF1E1E1E)
+    val Elevated = Color(0xFF2D2D2D)
+    val Accent = Color(0xFFA052D4)
+    val GradientStart = Color(0xFF667EEA)
+    val GradientEnd = Color(0xFF764BA2)
+    val TextPrimary = Color.White
+    val TextSecondary = Color(0xFF9CA3AF)
+    val TextTertiary = Color(0xFF6B7280)
+    val Divider = Color(0xFF4B5563)
+    val SubtitleNo = Color(0xFF6B7280)
+}
+
+// ========== DATA MODEL ==========
+data class PodcastItem(    val id: Int,
+    val title: String,
+    val size: Int,
+    val sizeText: String,
+    val subtitle: String,
+    val duration: String
+)
+
+// ========== MAIN ACTIVITY ==========
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme(
+                colorScheme = darkColorScheme(
+                    background = HorizonColors.Background,
+                    surface = HorizonColors.Card
+                )
+            ) {
+                HorizonLoopScreen()
+            }
+        }
+    }
+}
+
+// ========== MAIN SCREEN ==========
+@Composable
+fun HorizonLoopScreen() {
+    val items = remember {
+        listOf(
+            PodcastItem(1, "The Morning Flight", 30, "30 Mb", "Yes", "24:10"),
+            PodcastItem(2, "Wings of Wisdom", 52, "52 Mb", "Yes", "31:45"),
+            PodcastItem(3, "Sky Melodies", 38, "38 Mb", "No", "18:20"),
+            PodcastItem(4, "Dawn Chorus", 67, "67 Mb", "Yes", "42:15"),
+            PodcastItem(5, "Twilight Beats", 41, "41 Mb", "No", "22:50")
+        )
+    }
+
+    var filterVisible by remember { mutableStateOf(false) }
+    var currentFilter by remember { mutableStateOf("All") }
+    val actionStates = remember { mutableStateMapOf<Int, Boolean>() }
+
+    val filterOptions = listOf(
+        "All", "Size: Low to High", "Size: High to Low",
+        "Pinned", "With Subtitle", "No Subtitle"
+    )
+
+    // Filter & Sort logic
+    val displayItems = remember(currentFilter, actionStates.toMap()) {
+        var result = items.toList()        when (currentFilter) {
+            "Size: Low to High" -> result = result.sortedBy { it.size }
+            "Size: High to Low" -> result = result.sortedByDescending { it.size }
+            "Pinned" -> result = result.filter { actionStates[it.id] == true }
+            "With Subtitle" -> result = result.filter { it.subtitle == "Yes" }
+            "No Subtitle" -> result = result.filter { it.subtitle == "No" }
+        }
+        result
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HorizonColors.Background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            // ===== HEADER =====
+            Header()
+            Spacer(Modifier.height(24.dp))
+
+            // ===== SEARCH BAR (fixed 48.dp height) =====
+            SearchBar(
+                onFilterClick = { filterVisible = !filterVisible }
+            )
+            Spacer(Modifier.height(16.dp))
+
+            // ===== FILTER DROPDOWN (same 48.dp height) =====
+            if (filterVisible) {
+                FilterDropdown(
+                    options = filterOptions,
+                    selected = currentFilter,
+                    onOptionSelected = { currentFilter = it }
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // ===== CARDS LIST =====
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(displayItems, key = { it.id }) { item ->
+                    PodcastCard(
+                        item = item,
+                        isPinned = actionStates[item.id] == true,
+                        onPinToggle = {
+                            actionStates[item.id] = !(actionStates[item.id] ?: false)                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ========== HEADER ==========
+@Composable
+private fun Header() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Column {
+            Text(
+                text = "Horizon Loop",
+                color = HorizonColors.TextPrimary,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.5).sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Learn through listening, discover through stories",
+                color = HorizonColors.TextSecondary,
+                fontSize = 14.sp
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            Icon(
+                imageVector = Icons.Filled.Notifications,
+                contentDescription = "Notifications",
+                tint = HorizonColors.TextPrimary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { }
+            )
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "Settings",
+                tint = HorizonColors.TextPrimary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { }
+            )
+        }
+    }}
+
+// ========== SEARCH BAR (exactly 48.dp) ==========
+@Composable
+private fun SearchBar(onFilterClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(HorizonColors.Elevated)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Search,
+            contentDescription = "Search",
+            tint = HorizonColors.TextSecondary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        TextField(
+            value = "",
+            onValueChange = {},
+            placeholder = {
+                Text(
+                    "Search podcasts, music...",
+                    color = HorizonColors.TextTertiary,
+                    fontSize = 14.sp
+                )
+            },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = HorizonColors.Accent
+            ),
+            modifier = Modifier.weight(1f),
+            singleLine = true
+        )
+        Spacer(Modifier.width(4.dp))
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onFilterClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(                imageVector = Icons.Filled.Tune,
+                contentDescription = "Filter",
+                tint = HorizonColors.Accent,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+// ========== FILTER DROPDOWN (exactly 48.dp, same as search bar) ==========
+@Composable
+private fun FilterDropdown(
+    options: List<String>,
+    selected: String,
+    onOptionSelected: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(HorizonColors.Elevated)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(options) { option ->
+                val isSelected = option == selected
+                val textColor by animateColorAsState(
+                    if (isSelected) HorizonColors.Accent else HorizonColors.TextSecondary
+                )
+                Text(
+                    text = option,
+                    color = textColor,
+                    fontSize = 14.sp,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    maxLines = 1,
+                    modifier = Modifier.clickable { onOptionSelected(option) }
+                )
+            }
+        }
+    }
+}
+
+// ========== PODCAST CARD ==========
+@Composableprivate fun PodcastCard(
+    item: PodcastItem,
+    isPinned: Boolean,
+    onPinToggle: () -> Unit
+) {
+    val gradientBrush = Brush.linearGradient(
+        colors = listOf(HorizonColors.GradientStart, HorizonColors.GradientEnd)
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HorizonColors.Card)
+            .padding(start = 20.dp, end = 8.dp, top = 16.dp, bottom = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Icon Box
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(gradientBrush),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Headphones,
+                    contentDescription = "Podcast",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            // Title + Secondary info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 96.dp)
+            ) {
+                Text(
+                    text = item.title,
+                    color = HorizonColors.TextPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = item.sizeText,
+                        color = HorizonColors.TextSecondary,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "¦",
+                        color = HorizonColors.Divider,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "Subtitle:",
+                        color = HorizonColors.TextTertiary,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = item.subtitle,
+                        color = if (item.subtitle == "Yes") HorizonColors.Accent
+                                else HorizonColors.SubtitleNo,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // Duration + Arrow — pinned to right edge (4.dp from right, centered vertically)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Text(
+                text = item.duration,
+                color = HorizonColors.TextTertiary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            // Arrow button — flips horizontally when pinned
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onPinToggle() },                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowForward,
+                    contentDescription = "Action",
+                    tint = if (isPinned) HorizonColors.Accent else HorizonColors.TextTertiary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer {
+                            scaleX = if (isPinned) -1f else 1f
+                        }
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+fun PreviewHorizonLoop() {
+    MaterialTheme(colorScheme = darkColorScheme()) {
+        HorizonLoopScreen()
+    }
+}
