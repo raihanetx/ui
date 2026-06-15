@@ -1,0 +1,457 @@
+package com.horizon.loop.ui
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+
+@Composable
+fun HorizonLoopApp() {
+    // সলিড লাইট ব্যাকগ্রাউন্ড ডিভাইস ফ্রেম অনুকরণ করার জন্য
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF4F4F5)),
+        contentAlignment = Alignment.Center
+    ) {
+        HorizonLoopScreen()
+    }
+}
+
+@Composable
+fun HorizonLoopScreen() {
+    // State management
+    var isPlaying by remember { mutableStateOf(false) }
+    var currentPlaybackTime by remember { mutableFloatStateOf(0.0f) }
+    val totalDuration = 60.0f
+    val selectedDialogueIds = remember { mutableStateListOf<Int>() }
+    var currentActiveId by remember { mutableStateOf<Int?>(null) }
+
+    // Dialogue Dataset
+    val dialogues = remember {
+        listOf(
+            Dialogue(1, 0.0f, 4.0f, "Hi!", "হাই!"),
+            Dialogue(2, 4.0f, 8.5f, "Hello there.", "হ্যালো ওখানে।"),
+            Dialogue(3, 8.5f, 13.0f, "How are you doing?", "আপনি কেমন আছেন?"),
+            Dialogue(4, 13.0f, 21.0f, "Perfect. We want to ensure that selecting specific tracks triggers playback directly.", "চমৎকার। আমরা নিশ্চিত করতে চাই যে নির্দিষ্ট ট্র্যাক নির্বাচন করলে সরাসরি প্লেব্যাক শুরু হয়।"),
+            Dialogue(5, 21.0f, 25.0f, "Yes!", "হ্যাঁ!"),
+            Dialogue(6, 25.0f, 32.5f, "Confirmed. Timestamps are linked, enabling effortless sync during loop playback.", "নিশ্চিত করা হলো। টাইমস্ট্যাম্পগুলো সংযুক্ত রয়েছে, যা লুপ প্লেব্যাকের সময় নিরবচ্ছিন্ন সিঙ্ক নিশ্চিত করবে।"),
+            Dialogue(7, 32.5f, 36.0f, "Okay.", "ঠিক আছে।"),
+            Dialogue(8, 36.0f, 44.5f, "Yes, you can swap between mono, stereo, and high-fidelity output tracks at any point.", "হ্যাঁ, আপনি যেকোনো সময় মনো, স্টেরিও এবং হাই-ফিডেলিটি আউটপুট ট্র্যাকের মধ্যে পরিবর্তন করতে পারবেন।"),
+            Dialogue(9, 44.5f, 51.5f, "Excellent.", "চমৎকার।"),
+            Dialogue(10, 51.5f, 60.0f, "Great. Let's process the remaining audio buffers to finalize the workspace configuration.", "চমৎকার। ওয়ার্কস্পেস কনফিগারেশন চূড়ান্ত করতে বাকি অডিও বাফারগুলো প্রসেস করা যাক।")
+        )
+    }
+
+    // প্লেব্যাক টাইমিং টিক থ্রেড লজিক (১০০ মিলি-সেকেন্ড অন্তর ডাইনামিক আপডেট)
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (isActive) {
+                delay(100L)
+                currentPlaybackTime += 0.1f
+                if (currentPlaybackTime >= totalDuration) {
+                    currentPlaybackTime = 0.0f
+                }
+            }
+        }
+    }
+
+    // একটিভ ডায়ালগ আইডি ট্র্যাকিং
+    LaunchedEffect(currentPlaybackTime) {
+        val active = dialogues.find { currentPlaybackTime >= it.startTime && currentPlaybackTime < it.endTime }
+        currentActiveId = active?.id
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        // ১. মধ্যবর্তী ডায়ালগ স্ক্রোল লিস্ট
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 110.dp, bottom = 120.dp, start = 24.dp, end = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            itemsIndexed(dialogues, key = { _, item -> item.id }) { _, item ->
+                val isActive = currentPlaybackTime >= item.startTime && currentPlaybackTime < item.endTime
+                val isSelected = selectedDialogueIds.contains(item.id)
+
+                DialogueCard(
+                    dialogue = item,
+                    isActive = isActive,
+                    isSelected = isSelected,
+                    onClick = {
+                        val index = selectedDialogueIds.indexOf(item.id)
+                        if (index > -1) {
+                            selectedDialogueIds.removeAt(index)
+                        } else {
+                            selectedDialogueIds.add(item.id)
+                        }
+                        currentPlaybackTime = item.startTime
+                        if (!isPlaying) {
+                            isPlaying = true
+                        }
+                    }
+                )
+            }
+        }
+
+        // ২. ফ্লোটিং টপ হেডার এরিয়া (ডিপ ফেইড ট্রানজিশনসহ)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(144.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White,
+                            Color.White.copy(alpha = 0.95f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color(0xFFA1A1AA)
+                    )
+                }
+
+                Text(
+                    text = "Audio Title",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    fontFamily = FontFamily.SansSerif,
+                    letterSpacing = 1.sp
+                )
+
+                IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Options",
+                        tint = Color(0xFFA1A1AA)
+                    )
+                }
+            }
+        }
+
+        // ৩. ফ্লোটিং বটম ফেইড ওভারলে
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(130.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.White.copy(alpha = 0.9f),
+                            Color.White
+                        )
+                    )
+                )
+        )
+
+        // ৪. প্লেব্যাক কন্ট্রোলার প্যানেল (ফুটার এরিয়া)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+        ) {
+            // সিকবার এবং টাইমিং ইন্ডিকেটর
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = formatTime(currentPlaybackTime),
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color(0xFFA1A1AA),
+                    modifier = Modifier.width(36.dp)
+                )
+
+                // কাস্টম মোটা সিকবার ট্র্যাক (৫.ডিপি থিকনেস)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 4.dp)
+                        .height(24.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures { offset ->
+                                val percent = offset.x / size.width
+                                currentPlaybackTime = (percent * totalDuration).coerceIn(0f, totalDuration)
+                            }
+                        },
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    // ট্র্যাক ব্যাকগ্রাউন্ড
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF4F4F5))
+                    )
+                    // প্রোগ্রেস ফিল্ড
+                    val progressFraction = currentPlaybackTime / totalDuration
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progressFraction)
+                            .height(5.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black)
+                    )
+                    // সিকবার পিন
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .offset(x = (progressFraction * 260).dp - 7.dp) // আনুমানিক রেসপন্সিভ অফসেট
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black)
+                    )
+                }
+
+                Text(
+                    text = formatTime(totalDuration),
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color(0xFFA1A1AA),
+                    modifier = Modifier.width(36.dp),
+                    textAlign = TextAlign.End
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // সিমেট্রিক্যাল টেক্সট-ওনলি বাটনসমূহ (Rounded Full)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Rewind Button
+                Box(
+                    modifier = Modifier
+                        .size(width = 80.dp, height = 36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4F4F5))
+                        .clickable {
+                            currentPlaybackTime = (currentPlaybackTime - 5f).coerceAtLeast(0f)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Rewind",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF71717A)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Play / Pause Button
+                Box(
+                    modifier = Modifier
+                        .size(width = 96.dp, height = 36.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black)
+                        .clickable {
+                            isPlaying = !isPlaying
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isPlaying) "Pause" else "Play",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Forward Button
+                Box(
+                    modifier = Modifier
+                        .size(width = 80.dp, height = 36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4F4F5))
+                        .clickable {
+                            currentPlaybackTime = (currentPlaybackTime + 5f).coerceAtIn(0f, totalDuration)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Forward",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF71717A)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DialogueCard(
+    dialogue: Dialogue,
+    isActive: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    // কালার ও ভিজ্যুয়াল স্টেট এনিমেশন
+    val textColorAnim by animateColorAsState(
+        targetValue = when {
+            isSelected -> Color.Black
+            isActive -> Color(0xFF27272A)
+            else -> Color(0xFF71717A)
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "textColor"
+    )
+
+    val timeColorAnim by animateColorAsState(
+        targetValue = when {
+            isSelected -> Color.Black
+            isActive -> Color(0xFF27272A)
+            else -> Color(0xFFA1A1AA)
+        },
+        animationSpec = tween(durationMillis = 300),
+        label = "timeColor"
+    )
+
+    val cardAlphaAnim by animateFloatAsState(
+        targetValue = if (isActive || isSelected) 1f else 0.9f,
+        animationSpec = tween(durationMillis = 300),
+        label = "cardAlpha"
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF4F4F5).copy(alpha = 0.3f))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(16.dp)
+            .alpha(cardAlphaAnim),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // একই প্যারামিটারে টাইমস্ট্যাম্প এবং ইংরেজি ডায়ালগ (Inline Layout)
+            val timelineText = "[${formatTime(dialogue.startTime)} — ${formatTime(dialogue.endTime)}]"
+            val enAnnotatedText = buildAnnotatedString {
+                withStyle(
+                    style = SpanStyle(
+                        color = timeColorAnim,
+                        fontWeight = if (isSelected || isActive) FontWeight.Medium else FontWeight.Normal
+                    )
+                ) {
+                    append("$timelineText  ")
+                }
+                withStyle(
+                    style = SpanStyle(
+                        color = textColorAnim,
+                        fontWeight = when {
+                            isSelected -> FontWeight.SemiBold
+                            isActive -> FontWeight.Medium
+                            else -> FontWeight.Normal
+                        }
+                    )
+                ) {
+                    append(dialogue.textEn)
+                }
+            }
+
+            Text(
+                text = enAnnotatedText,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // সমপর্যায়ের সাইজ ও কালারে বাংলা টেক্সট (Same Size & Color System)
+            Text(
+                text = dialogue.textBn,
+                fontSize = 12.sp,
+                color = textColorAnim,
+                fontWeight = when {
+                    isSelected -> FontWeight.SemiBold
+                    isActive -> FontWeight.Medium
+                    else -> FontWeight.Normal
+                },
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewHorizonLoop() {
+    HorizonLoopApp()
+}
