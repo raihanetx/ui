@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Word Forward - Dialogue</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    animation: {
+                        'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateY(-12px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-black flex flex-col h-screen antialiased w-screen overflow-hidden font-sans pt-[max(1rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+
+    <!-- PLAYER SHELL -->
+    <div id="player-shell" class="flex flex-col h-full w-full">
+        
+        <!-- Header (Height halved) -->
+        <header class="px-5 py-1.5 flex items-center justify-between flex-shrink-0">
+            <button class="w-9 h-9 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 active:scale-95 rounded-full transition-all">
+                <i class="fas fa-chevron-down text-base"></i>
+            </button>
+            <div class="text-center">
+                <p id="header-title" class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest transition-all">Dialogue</p>
+                <h2 id="header-subtitle" class="text-sm font-bold text-black mt-0 truncate max-w-[200px] transition-all">Bilingual Subtitles</h2>
+            </div>
+            <button class="w-9 h-9 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 active:scale-95 rounded-full transition-all">
+                <i class="fas fa-ellipsis text-base"></i>
+            </button>
+        </header>
+
+        <!-- Main Content (Dialogue Slide) -->
+        <main class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative">
+            
+            <!-- EMPTY STATE -->
+            <div id="dialogue-empty" class="flex flex-col items-center justify-center min-h-full text-center px-6">
+                <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center text-neutral-400 mb-5">
+                    <i class="fas fa-language text-2xl"></i>
+                </div>
+                <p class="text-base font-bold text-neutral-800 mb-1.5">No translation available</p>
+                <p class="text-xs text-neutral-500 mb-6 max-w-[220px] leading-relaxed">Tap the "Translate" button below to generate English, Pronunciation & Bangla subtitles.</p>
+            </div>
+
+            <!-- DIALOGUE LIST -->
+            <div id="dialogue-list" class="hidden px-5 py-3 space-y-2.5">
+                
+                <!-- Universal Layout: Continuous text flow for English & Bangla -->
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:01 - 00:02]</span> Hello. <span class="bangla-text hidden">হ্যালো।</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- হ্যালো --</p>
+                </div>
+
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:03 - 00:04]</span> Good morning. <span class="bangla-text hidden">শুভ সকাল।</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- গুড-মর্নিং --</p>
+                </div>
+
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:05 - 00:07]</span> How are you? <span class="bangla-text hidden">তুমি কেমন আছো?</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- হাউ-আর-ইউ? --</p>
+                </div>
+
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:08 - 00:10]</span> I am fine, thanks. <span class="bangla-text hidden">আমি ভালো আছি, ধন্যবাদ।</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- আই-অ্যাম-ফাইন,-থ্যাংকস। --</p>
+                </div>
+
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:11 - 00:14]</span> What is your name, sir? <span class="bangla-text hidden">আপনার নাম কী, স্যার?</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- হোয়াট-ইজ-ইয়োর-নেইম,-সার? --</p>
+                </div>
+
+                <div onclick="handleCardClick(this)" class="card rounded-xl py-3 px-4 transition-colors duration-150 cursor-pointer text-neutral-400">
+                    <p class="text-sm font-medium leading-relaxed">
+                        <span class="tabular-nums whitespace-nowrap">[00:15 - 00:18]</span> My name is John, nice to meet. <span class="bangla-text hidden">আমার নাম জন, আপনার সাথে দেখা হয়ে ভালো লাগলো।</span>
+                    </p>
+                    <p class="pron-text hidden text-sm font-medium italic text-blue-300 mt-1 animate-slide-in">-- মাই-নেইম-ইজ-জন,-নাইস-টু-মিট। --</p>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- DYNAMIC AUDIO DOCK -->
+        <div class="flex-shrink-0 bg-white px-5 pt-4 pb-2">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-[11px] text-neutral-500 font-bold tabular-nums w-8">00:12</span>
+                <div class="flex-1 h-1.5 bg-neutral-200 rounded-full cursor-pointer relative">
+                    <div class="h-1.5 bg-black rounded-full w-1/4 relative">
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-black rounded-full shadow-md ring-4 ring-white"></div>
+                    </div>
+                </div>
+                <span class="text-[11px] text-neutral-500 font-bold tabular-nums w-8 text-right">01:15</span>
+            </div>
+            <div class="flex items-center justify-center gap-6 mb-1">
+                <button class="text-sm font-bold text-neutral-700 hover:text-black active:scale-90 transition-all py-2 px-3 rounded-full hover:bg-neutral-100">-15s</button>
+                <button id="dock-play-btn" onclick="handleDockAction()" class="px-6 py-2.5 bg-black text-white text-sm font-bold rounded-full active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-language text-xs"></i> Translate
+                </button>
+                <button class="text-sm font-bold text-neutral-700 hover:text-black active:scale-90 transition-all py-2 px-3 rounded-full hover:bg-neutral-100">+15s</button>
+            </div>
+        </div>
+
+        <!-- Pagination Dots -->
+        <div class="flex-shrink-0 flex justify-center items-center gap-1.5 pt-2 pb-3 bg-white">
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-4 h-1.5 rounded-full bg-black transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Translation & Dock Logic ---
+        let isTranslated = false;
+        let isTranslating = false;
+        const playBtn = document.getElementById('dock-play-btn');
+
+        function handleDockAction() {
+            if (!isTranslated) {
+                startDialogueTranslation();
+            } else {
+                if (playBtn.innerHTML.includes('fa-play')) {
+                    playBtn.innerHTML = `<i class="fas fa-pause text-xs"></i> Pause`;
+                } else {
+                    playBtn.innerHTML = `<i class="fas fa-play text-xs"></i> Play`;
+                }
+            }
+        }
+
+        function startDialogueTranslation() {
+            isTranslating = true;
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    isTranslating = false;
+                    isTranslated = true;
+                    playBtn.innerHTML = `<i class="fas fa-play text-xs"></i> Play`;
+                    document.getElementById('dialogue-empty').classList.add('hidden');
+                    document.getElementById('dialogue-list').classList.remove('hidden');
+                    document.querySelectorAll('.pron-text, .bangla-text').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    playBtn.innerHTML = `<i class="fas fa-spinner fa-spin text-xs"></i> ${progress}%`;
+                }
+            }, 400);
+        }
+
+        // --- Direct Select Logic (Text Color Change Only, No Background) ---
+        function handleCardClick(cardEl) {
+            if (!isTranslated) return;
+            
+            const pronText = cardEl.querySelector('.pron-text');
+            
+            if (cardEl.classList.contains('text-neutral-900')) {
+                // Deselect: Main text goes back to grayish
+                cardEl.classList.remove('text-neutral-900');
+                cardEl.classList.add('text-neutral-400');
+                
+                // Pronunciation goes back to faded blue & slanted (italic)
+                pronText.classList.remove('text-blue-600', 'not-italic');
+                pronText.classList.add('text-blue-300', 'italic');
+            } else {
+                // Select: Main text turns bright black
+                cardEl.classList.add('text-neutral-900');
+                cardEl.classList.remove('text-neutral-400');
+                
+                // Pronunciation turns solid blue & proper upright (not-italic)
+                pronText.classList.add('text-blue-600', 'not-italic');
+                pronText.classList.remove('text-blue-300', 'italic');
+            }
+        }
+    </script>
+</body>
+</html>

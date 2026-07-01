@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Word Forward - Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    animation: {
+                        'slide-in': 'slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateY(-12px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-black flex flex-col h-screen antialiased w-screen overflow-hidden font-sans pt-[max(1rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+
+    <!-- PLAYER SHELL -->
+    <div id="player-shell" class="flex flex-col h-full w-full">
+        
+        <!-- Header -->
+        <header class="px-5 py-1.5 flex items-center justify-between flex-shrink-0">
+            <button class="w-9 h-9 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 active:scale-95 rounded-full transition-all">
+                <i class="fas fa-chevron-down text-base"></i>
+            </button>
+            <div class="text-center">
+                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">My Notes</p>
+                <h2 class="text-sm font-bold text-black mt-0 truncate max-w-[200px]">Timestamped Notes</h2>
+            </div>
+            <button onclick="openNoteModal()" class="w-9 h-9 flex items-center justify-center text-neutral-700 hover:bg-neutral-100 active:scale-95 rounded-full transition-all">
+                <i class="fas fa-plus text-base"></i>
+            </button>
+        </header>
+
+        <!-- Main Content (Notes Slide) -->
+        <main class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-3">
+            
+            <!-- NOTE LIST -->
+            <div id="note-list" class="space-y-2.5">
+                <h4 class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide mb-1 px-1">Saved Notes</h4>
+                
+                <!-- Saved Note Card 1 (Fixed wrapping & line clamp) -->
+                <div onclick="toggleNoteExpand(this)" class="border border-neutral-100 rounded-xl p-3 active:bg-neutral-50 transition-all cursor-pointer">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-note-sticky text-neutral-400 text-[10px]"></i>
+                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Today · 14 Words</span>
+                        </div>
+                        <div class="relative">
+                            <button onclick="event.stopPropagation(); toggleMenu(this)" class="w-6 h-6 flex items-center justify-center text-neutral-400 hover:text-black rounded-full transition-colors">
+                                <i class="fas fa-ellipsis-vertical text-xs"></i>
+                            </button>
+                            <div class="menu hidden absolute right-0 top-full mt-1 w-28 bg-white border border-neutral-100 rounded-lg shadow-lg z-10 py-1">
+                                <button onclick="event.stopPropagation(); alert('Edit clicked!')" class="w-full text-left px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">Edit</button>
+                                <button onclick="event.stopPropagation(); deleteItem(this)" class="w-full text-left px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="note-text text-sm font-medium text-neutral-800 leading-relaxed line-clamp-2 whitespace-pre-wrap break-words">Remember to practice the intonation for "How are you?" and try to stress the word "how" slightly more than the others in this sentence.</p>
+                </div>
+
+                <!-- Saved Note Card 2 -->
+                <div onclick="toggleNoteExpand(this)" class="border border-neutral-100 rounded-xl p-3 active:bg-neutral-50 transition-all cursor-pointer">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-note-sticky text-neutral-400 text-[10px]"></i>
+                            <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Yesterday · 5 Words</span>
+                        </div>
+                        <div class="relative">
+                            <button onclick="event.stopPropagation(); toggleMenu(this)" class="w-6 h-6 flex items-center justify-center text-neutral-400 hover:text-black rounded-full transition-colors">
+                                <i class="fas fa-ellipsis-vertical text-xs"></i>
+                            </button>
+                            <div class="menu hidden absolute right-0 top-full mt-1 w-28 bg-white border border-neutral-100 rounded-lg shadow-lg z-10 py-1">
+                                <button onclick="event.stopPropagation(); alert('Edit clicked!')" class="w-full text-left px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">Edit</button>
+                                <button onclick="event.stopPropagation(); deleteItem(this)" class="w-full text-left px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="note-text text-sm font-medium text-neutral-800 leading-relaxed line-clamp-2 whitespace-pre-wrap break-words">The word "fine" is stressed here.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- DYNAMIC AUDIO DOCK -->
+        <div class="flex-shrink-0 bg-white px-5 pt-4 pb-2">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-[11px] text-neutral-500 font-bold tabular-nums w-8">00:12</span>
+                <div class="flex-1 h-1.5 bg-neutral-200 rounded-full cursor-pointer relative">
+                    <div class="h-1.5 bg-black rounded-full w-1/4 relative">
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-black rounded-full shadow-md ring-4 ring-white"></div>
+                    </div>
+                </div>
+                <span class="text-[11px] text-neutral-500 font-bold tabular-nums w-8 text-right">01:15</span>
+            </div>
+            <div class="flex items-center justify-center gap-6 mb-1">
+                <button class="text-sm font-bold text-neutral-700 hover:text-black active:scale-90 transition-all py-2 px-3 rounded-full hover:bg-neutral-100">-15s</button>
+                <button onclick="togglePlay(this)" class="px-6 py-2.5 bg-black text-white text-sm font-bold rounded-full active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-play text-xs"></i> Play
+                </button>
+                <button class="text-sm font-bold text-neutral-700 hover:text-black active:scale-90 transition-all py-2 px-3 rounded-full hover:bg-neutral-100">+15s</button>
+            </div>
+        </div>
+
+        <!-- Pagination Dots (4th dot active) -->
+        <div class="flex-shrink-0 flex justify-center items-center gap-1.5 pt-2 pb-3 bg-white">
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-neutral-300 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+            <div class="w-4 h-1.5 rounded-full bg-black transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"></div>
+        </div>
+    </div>
+
+    <!-- ADD NOTE POP-UP -->
+    <div id="note-backdrop" onclick="closeNoteModal()" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+    <div id="note-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-95 opacity-0 pointer-events-none z-50 bg-white rounded-2xl p-5 shadow-2xl w-[90%] max-w-md transition-[transform,opacity] duration-[350ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
+        <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-bold text-black">Add Note</h4>
+            <button onclick="closeNoteModal()" class="w-7 h-7 flex items-center justify-center text-neutral-400 hover:text-black hover:bg-neutral-100 rounded-full transition-all">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <textarea id="note-input" rows="4" placeholder="Write your note here..." class="w-full bg-neutral-100 rounded-lg px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-black focus:bg-white mb-4 resize-none transition-all"></textarea>
+        
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="closeNoteModal()" class="py-3 bg-neutral-100 text-neutral-700 font-bold rounded-lg active:scale-95 transition-transform text-sm">Cancel</button>
+            <button onclick="saveNote()" class="py-3 bg-black text-white font-bold rounded-lg active:scale-95 transition-transform text-sm">Save Note</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.menu').forEach(m => m.classList.add('hidden'));
+        });
+
+        function toggleMenu(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = !menu.classList.contains('hidden');
+            document.querySelectorAll('.menu').forEach(m => m.classList.add('hidden'));
+            if (!isOpen) menu.classList.remove('hidden');
+        }
+
+        function deleteItem(btn) {
+            const card = btn.closest('.border');
+            card.remove();
+        }
+
+        function toggleNoteExpand(el) {
+            const text = el.querySelector('.note-text');
+            text.classList.toggle('line-clamp-2');
+        }
+
+        function togglePlay(btn) {
+            if (btn.innerHTML.includes('fa-play')) {
+                btn.innerHTML = `<i class="fas fa-pause text-xs"></i> Pause`;
+            } else {
+                btn.innerHTML = `<i class="fas fa-play text-xs"></i> Play`;
+            }
+        }
+
+        function openNoteModal() {
+            document.getElementById('note-modal').classList.remove('scale-95', 'opacity-0', 'pointer-events-none');
+            document.getElementById('note-backdrop').classList.remove('opacity-0', 'pointer-events-none');
+        }
+        
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.add('scale-95', 'opacity-0', 'pointer-events-none');
+            document.getElementById('note-backdrop').classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function saveNote() {
+            const input = document.getElementById('note-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const words = text.split(/\s+/).length;
+            const wordString = words + (words === 1 ? " Word" : " Words");
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'border border-neutral-100 rounded-xl p-3 active:bg-neutral-50 transition-all cursor-pointer animate-slide-in';
+            newItem.setAttribute('onclick', 'toggleNoteExpand(this)');
+            // Added break-words and whitespace-pre-wrap here too for saved notes
+            newItem.innerHTML = `
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fas fa-note-sticky text-neutral-400 text-[10px]"></i>
+                        <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">Today · ${wordString}</span>
+                    </div>
+                    <div class="relative">
+                        <button onclick="event.stopPropagation(); toggleMenu(this)" class="w-6 h-6 flex items-center justify-center text-neutral-400 hover:text-black rounded-full transition-colors">
+                            <i class="fas fa-ellipsis-vertical text-xs"></i>
+                        </button>
+                        <div class="menu hidden absolute right-0 top-full mt-1 w-28 bg-white border border-neutral-100 rounded-lg shadow-lg z-10 py-1">
+                            <button onclick="event.stopPropagation(); alert('Edit clicked!')" class="w-full text-left px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">Edit</button>
+                            <button onclick="event.stopPropagation(); deleteItem(this)" class="w-full text-left px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50">Delete</button>
+                        </div>
+                    </div>
+                </div>
+                <p class="note-text text-sm font-medium text-neutral-800 leading-relaxed line-clamp-2 whitespace-pre-wrap break-words">${text}</p>
+            `;
+            
+            document.getElementById('note-list').prepend(newItem);
+            
+            input.value = "";
+            closeNoteModal();
+        }
+    </script>
+</body>
+</html>

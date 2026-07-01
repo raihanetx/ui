@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Word Forward - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-neutral-50 text-black flex flex-col h-screen antialiased w-screen overflow-hidden font-sans pt-[max(1rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+
+    <!-- SETTINGS SHELL -->
+    <div class="flex flex-col h-full w-full">
+        
+        <!-- Header -->
+        <header class="px-6 py-3 flex items-center justify-between flex-shrink-0">
+            <button class="w-9 h-9 flex items-center justify-center text-neutral-700 hover:bg-neutral-200 active:scale-95 rounded-full transition-all">
+                <i class="fas fa-chevron-left text-base"></i>
+            </button>
+            <div class="text-center">
+                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Preferences</p>
+                <h2 class="text-sm font-bold text-black mt-0 truncate max-w-[200px]">Settings</h2>
+            </div>
+            <div class="w-9 h-9"></div> <!-- Dummy for alignment -->
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-6 py-4">
+            
+            <!-- Section 1: API Configuration -->
+            <section class="mb-6">
+                <h4 class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-3 px-3">API Configuration</h4>
+                <div class="bg-white border border-neutral-100 rounded-2xl shadow-sm p-4">
+                    <label class="text-sm font-semibold text-neutral-900 block mb-3">Platform API Key</label>
+                    <div class="relative">
+                        <input id="api-key-input" type="password" placeholder="Enter your API key here" class="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-4 pr-12 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-black focus:bg-white transition-all">
+                        <button onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-black hover:bg-neutral-100 rounded-full transition-all">
+                            <i id="eye-icon" class="fas fa-eye-slash text-sm"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-neutral-400 mt-3 leading-relaxed">Required for accessing transcription and translation services.</p>
+                </div>
+            </section>
+
+            <!-- Section 2: AI Models (iOS Style Grouped List) -->
+            <section class="mb-6">
+                <h4 class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-3 px-3">AI Models</h4>
+                <div class="bg-white border border-neutral-100 rounded-2xl shadow-sm divide-y divide-neutral-100 overflow-hidden">
+                    
+                    <!-- Audio to Text Engine -->
+                    <div class="p-4 flex items-center gap-3 active:bg-neutral-50 transition-colors cursor-pointer">
+                        <div class="w-9 h-9 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-600 flex-shrink-0">
+                            <i class="fas fa-microphone-lines text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-neutral-900">Audio to Text Engine</p>
+                            <p class="text-xs text-neutral-500 mt-0.5">Whisper Large V3</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-neutral-300 text-xs"></i>
+                    </div>
+
+                    <!-- Translation & Accent Model -->
+                    <div class="p-4 flex items-center gap-3 active:bg-neutral-50 transition-colors cursor-pointer">
+                        <div class="w-9 h-9 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-600 flex-shrink-0">
+                            <i class="fas fa-language text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-neutral-900">Text Translation & Accent</p>
+                            <p class="text-xs text-neutral-500 mt-0.5">Random Model</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-neutral-300 text-xs"></i>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Section 3: Playback Controls -->
+            <section class="mb-6">
+                <h4 class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-3 px-3">Playback Controls</h4>
+                
+                <!-- Skip Amount -->
+                <div class="bg-white border border-neutral-100 rounded-2xl shadow-sm p-4 mb-4">
+                    <p class="text-sm font-semibold text-neutral-900 block mb-3">Skip Backward / Forward Amount</p>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setActiveSegment(this, 'skip-group')" class="skip-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">5s</button>
+                        <button onclick="setActiveSegment(this, 'skip-group')" class="skip-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">10s</button>
+                        <button onclick="setActiveSegment(this, 'skip-group')" class="skip-group py-2.5 text-xs font-bold rounded-full bg-black text-white transition-all active:scale-95">15s</button>
+                        <button onclick="setActiveSegment(this, 'skip-group')" class="skip-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">30s</button>
+                    </div>
+                </div>
+
+                <!-- Speed Controller -->
+                <div class="bg-white border border-neutral-100 rounded-2xl shadow-sm p-4">
+                    <p class="text-sm font-semibold text-neutral-900 block mb-3">Playback Speed</p>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button onclick="setActiveSegment(this, 'speed-group')" class="speed-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">0.5x</button>
+                        <button onclick="setActiveSegment(this, 'speed-group')" class="speed-group py-2.5 text-xs font-bold rounded-full bg-black text-white transition-all active:scale-95">1.0x</button>
+                        <button onclick="setActiveSegment(this, 'speed-group')" class="speed-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">1.5x</button>
+                        <button onclick="setActiveSegment(this, 'speed-group')" class="speed-group py-2.5 text-xs font-bold rounded-full bg-neutral-100 text-neutral-700 transition-all active:scale-95">2.0x</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: About & Logout -->
+            <section class="mb-8">
+                <div class="bg-white border border-neutral-100 rounded-2xl shadow-sm divide-y divide-neutral-100 overflow-hidden">
+                    <div class="p-4 flex items-center gap-3 active:bg-neutral-50 transition-colors cursor-pointer">
+                        <div class="w-9 h-9 bg-neutral-100 rounded-xl flex items-center justify-center text-neutral-600 flex-shrink-0">
+                            <i class="fas fa-circle-info text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-neutral-900">About App</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-neutral-300 text-xs"></i>
+                    </div>
+                    
+                    <div class="p-4 flex items-center gap-3 active:bg-red-50 transition-colors cursor-pointer">
+                        <div class="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center text-red-500 flex-shrink-0">
+                            <i class="fas fa-arrow-right-from-bracket text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-red-500">Logout</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Save Button (Fully Rounded) -->
+            <button class="w-full bg-black text-white text-sm font-bold py-3.5 rounded-full active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2 mb-4">
+                <i class="fas fa-check text-xs"></i> Save Changes
+            </button>
+
+        </main>
+    </div>
+
+    <script>
+        // Toggle API Key Visibility
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('api-key-input');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        // Segmented Control Active State Logic
+        function setActiveSegment(clickedBtn, groupName) {
+            document.querySelectorAll(`.${groupName}`).forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white');
+                btn.classList.add('bg-neutral-100', 'text-neutral-700');
+            });
+            
+            clickedBtn.classList.remove('bg-neutral-100', 'text-neutral-700');
+            clickedBtn.classList.add('bg-black', 'text-white');
+        }
+    </script>
+</body>
+</html>
